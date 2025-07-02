@@ -1,5 +1,11 @@
 """See _CONFIGS for the list of available configs."""
 
+"""
+Added:
+New LeRobotYourRobotDataConfig
+The config with the LoRA fine-tuning added as an option using the name: and repo_id: of this
+"""
+
 import abc
 from collections.abc import Sequence
 import dataclasses
@@ -20,8 +26,10 @@ import openpi.models.tokenizer as _tokenizer
 import openpi.policies.aloha_policy as aloha_policy
 import openpi.policies.droid_policy as droid_policy
 import openpi.policies.libero_policy as libero_policy
+import openpi.policies.moto_policy as moto_policy
 import openpi.shared.download as _download
 import openpi.shared.normalize as _normalize
+import openpi.shared.nnx_utils as nnx_utils
 import openpi.training.droid_rlds_dataset as droid_rlds_dataset
 import openpi.training.optimizer as _optimizer
 import openpi.training.weight_loaders as weight_loaders
@@ -379,6 +387,58 @@ class RLDSDroidDataConfig(DataConfigFactory):
             action_space=self.action_space,
         )
 
+@dataclasses.dataclass(frozen=True)
+class LeRobotMotomanRobotDataConfig(DataConfigFactory):
+    """
+    Data config for your custom robot dataset.
+   
+    Modify this class based on your robot's specific requirements:
+    - Set default_prompt if you want a default task description
+    - Modify action_sequence_keys if your dataset uses different keys for actions
+    """
+
+    # Default task description if none is provided
+    default_prompt: str | None = None
+
+
+    @override
+    def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
+        # Repack transform is to just get it in the form that data transforms will use from the moto_policy.py file
+        # Then the data transforms will output a nice format of state, image, image_mask, action, and prompt
+        repack_transform = _transforms.Group(
+            inputs=[
+                _transforms.RepackTransform(
+                    {
+                        # Map your dataset keys to the expected keys
+                        "observation/image": "image",  # Main camera view
+                        "observation/wrist_image": "wrist_image",  # Wrist camera (optional)
+                        "observation/state": "state",  # Joint states
+                        "actions": "actions",  # Actions
+                        "prompt": "prompt",  # Task description
+                    }
+                )
+            ]
+        )
+
+        # Data transforms define how to convert your data format to model input/output format
+        # Data is exteroception, proprioception, and joint deltas, all padded in this function
+        # This is used for transforming data later inputted to the transforms
+        data_transforms = _transforms.Group(
+            inputs=[moto_policy.MotoPolicyInputs(action_dim=model_config.action_dim, model_type=model_config.model_type)],
+            outputs=[moto_policy.MotoPolicyOutputs()],
+        )
+
+        # Model transforms (standard, don't change)
+        model_transforms = ModelTransformFactory(default_prompt=self.default_prompt)(model_config)
+
+
+        return dataclasses.replace(
+            self.create_base_config(assets_dirs),
+            repack_transforms=repack_transform,
+            data_transforms=data_transforms,
+            model_transforms=model_transforms,
+        )
+
 
 @dataclasses.dataclass(frozen=True)
 class TrainConfig:
@@ -473,6 +533,31 @@ _CONFIGS = [
     #
     # Inference Aloha configs.
     #
+    TrainConfig(
+        name="motoman_lora",
+        # π₀ model with LoRA fine-tuning (low memory, recommended for most users)
+        model=pi0.Pi0Config(
+            action_dim=15,  # Change to your robot's action dimensions
+            action_horizon=20,  # Change to desired action chunk length
+            #paligemma_variant="gemma_2b_lora",  # Enable LoRA for vision-language model
+            action_expert_variant="gemma_300m_lora",  # Enable LoRA for action expert
+        ),
+        data=LeRobotMotomanRobotDataConfig(
+            repo_id="pracsys/motoman_test",  # Change to your dataset repo ID
+            base_config=DataConfig(
+                prompt_from_task=True, #Important to set this to true
+            ),
+            default_prompt="perform manipulation task",
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi0_base/params"),
+        num_train_steps=30_000,
+        # LoRA-specific settings
+        freeze_filter=pi0.Pi0Config(
+            #paligemma_variant="gemma_2b_lora",
+            action_expert_variant="gemma_300m_lora"
+        ).get_freeze_filter(),
+        ema_decay=None,  # Turn off EMA for LoRA
+    ),
     TrainConfig(
         name="pi0_aloha",
         model=pi0.Pi0Config(),
