@@ -395,6 +395,10 @@ class LeRobotMotomanRobotDataConfig(DataConfigFactory):
     Modify this class based on your robot's specific requirements:
     - Set default_prompt if you want a default task description
     - Modify action_sequence_keys if your dataset uses different keys for actions
+
+    In create data loader the create function here is called
+    It ends with this dataclasses.replace() which uses config.assets_dirs
+    if uses config.model.action_horizon in create_torch_dataloader to create_torch_dataset to chunk the actions
     """
 
     # Default task description if none is provided

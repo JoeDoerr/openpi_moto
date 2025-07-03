@@ -152,6 +152,7 @@ def train_step(
 
     train_rng = jax.random.fold_in(rng, state.step)
     observation, actions = batch
+    print("[JOE] actions shape: ", actions.shape)
 
     # Filter out frozen params.
     diff_state = nnx.DiffState(0, config.trainable_filter)

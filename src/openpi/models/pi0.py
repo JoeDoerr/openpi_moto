@@ -248,8 +248,8 @@ class Pi0(_model.BaseModel):
         noise = jax.random.normal(noise_rng, actions.shape)
         time = jax.random.beta(time_rng, 1.5, 1, batch_shape) * 0.999 + 0.001
         time_expanded = time[..., None, None]
-        x_t = time_expanded * noise + (1 - time_expanded) * actions
-        u_t = noise - actions
+        x_t = time_expanded * noise + (1 - time_expanded) * actions #Noisy version of actions at time t
+        u_t = noise - actions #target direction model should predict to denoise the given action
 
         # one big forward pass of prefix + suffix at once
         prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
@@ -258,12 +258,14 @@ class Pi0(_model.BaseModel):
         ar_mask = jnp.concatenate([prefix_ar_mask, suffix_ar_mask], axis=0)
         attn_mask = make_attn_mask(input_mask, ar_mask)
         positions = jnp.cumsum(input_mask, axis=1) - 1
+        #Running the model forward and getting the suffix_out which is the output for actions
         (prefix_out, suffix_out), _ = self.PaliGemma.llm(
             [prefix_tokens, suffix_tokens], mask=attn_mask, positions=positions
         )
-        v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :])
+        #v_t is [batch, action_horizon, action_dim]
+        v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :]) #Predicted denoising direction for the actions outputted
 
-        return jnp.mean(jnp.square(v_t - u_t), axis=-1)
+        return jnp.mean(jnp.square(v_t - u_t), axis=-1) #Difference between predicted and target denoising direction
 
     @override
     def sample_actions(
