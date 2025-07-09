@@ -409,21 +409,27 @@ class LeRobotMotomanRobotDataConfig(DataConfigFactory):
 
     # Default task description if none is provided
     default_prompt: str | None = None
-
+    action_sequence_keys: Sequence[str] = ("action",)
 
     @override
     def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
         # Repack transform is to just get it in the form that data transforms will use from the moto_policy.py file
         # Then the data transforms will output a nice format of state, image, image_mask, action, and prompt
+        print("LeRobotMotomanRobotDataConfig created", flush=True)
         repack_transform = _transforms.Group(
             inputs=[
                 _transforms.RepackTransform(
                     {
                         # Map your dataset keys to the expected keys
-                        "head_camera": "image",  # Main camera view
-                        "wrist_camera": "wrist_image",  # Wrist camera (optional)
-                        "observation.state": "state",  # Joint states
-                        "action": "actions",  # Actions
+                        #"head_camera": "image",  # Main camera view
+                        #"wrist_camera": "wrist_image",  # Wrist camera (optional)
+                        #"observation.state": "state",  # Joint states
+                        #"action": "actions",  # Actions
+                        #"prompt": "prompt",  # Task description
+                        "image" : "head_camera",  # Main camera view
+                        "wrist_image" : "wrist_camera",  # Wrist camera (optional)
+                        "state" : "observation.state",  # Joint states
+                        "actions": "action",  # Actions
                         "prompt": "prompt",  # Task description
                     }
                 )
@@ -447,6 +453,7 @@ class LeRobotMotomanRobotDataConfig(DataConfigFactory):
             repack_transforms=repack_transform,
             data_transforms=data_transforms,
             model_transforms=model_transforms,
+            action_sequence_keys=self.action_sequence_keys,
         )
 
 

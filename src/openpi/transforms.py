@@ -67,6 +67,7 @@ class CompositeTransform(DataTransformFn):
 
     def __call__(self, data: DataDict) -> DataDict:
         for transform in self.transforms:
+            #print("composite transform running, the data is", type(data))
             data = transform(data)
         return data
 
@@ -97,6 +98,7 @@ class RepackTransform(DataTransformFn):
     structure: at.PyTree[str]
 
     def __call__(self, data: DataDict) -> DataDict:
+        #print("repack called")
         flat_item = flatten_dict(data)
         return jax.tree.map(lambda k: flat_item[k], self.structure)
 
