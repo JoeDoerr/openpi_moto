@@ -48,6 +48,7 @@ class MotoPolicyInputs(transforms.DataTransformFn):
     model_type: _model.ModelType = _model.ModelType.PI0
 
     def __call__(self, data: dict) -> dict:
+        print("CALLING MOTO POLICY TO TRANSFORM INPUTS", flush=True)
         # Simple state handling - just use the state as-is and pad
         state = np.asarray(data["state"])
         state = transforms.pad_to_dim(state, self.action_dim)
