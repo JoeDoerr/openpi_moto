@@ -142,7 +142,8 @@ def create_torch_dataset(
         delta_timestamps={
             key: [t / dataset_meta.fps for t in range(action_horizon)] for key in data_config.action_sequence_keys
         },
-    )
+    ) #action sequence keys is just "actions" normally but you can change it if your dataset is weird
+    #Not sure where the delta timestamps matters other than just the number of action horizon steps
 
     if data_config.prompt_from_task:
         dataset = TransformedDataset(dataset, [_transforms.PromptFromLeRobotTask(dataset_meta.tasks)])

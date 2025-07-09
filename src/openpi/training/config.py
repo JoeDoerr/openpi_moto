@@ -399,6 +399,12 @@ class LeRobotMotomanRobotDataConfig(DataConfigFactory):
     In create data loader the create function here is called
     It ends with this dataclasses.replace() which uses config.assets_dirs
     if uses config.model.action_horizon in create_torch_dataloader to create_torch_dataset to chunk the actions
+
+    input:
+    ['head_camera', 'wrist_camera', 'observation.state', 'action', 'prompt', 'timestamp', 'frame_index', 'episode_index', 'index', 'task_index']
+
+    output:
+    ['image', 'wrist_image', 'state', 'actions', 'prompt']
     """
 
     # Default task description if none is provided
@@ -414,10 +420,10 @@ class LeRobotMotomanRobotDataConfig(DataConfigFactory):
                 _transforms.RepackTransform(
                     {
                         # Map your dataset keys to the expected keys
-                        "observation/image": "image",  # Main camera view
-                        "observation/wrist_image": "wrist_image",  # Wrist camera (optional)
-                        "observation/state": "state",  # Joint states
-                        "actions": "actions",  # Actions
+                        "head_camera": "image",  # Main camera view
+                        "wrist_camera": "wrist_image",  # Wrist camera (optional)
+                        "observation.state": "state",  # Joint states
+                        "action": "actions",  # Actions
                         "prompt": "prompt",  # Task description
                     }
                 )
@@ -541,7 +547,7 @@ _CONFIGS = [
         name="motoman_lora",
         # π₀ model with LoRA fine-tuning (low memory, recommended for most users)
         model=pi0.Pi0Config(
-            action_dim=15,  # Change to your robot's action dimensions
+            action_dim=16,  # Change to your robot's action dimensions
             action_horizon=20,  # Change to desired action chunk length
             #paligemma_variant="gemma_2b_lora",  # Enable LoRA for vision-language model
             action_expert_variant="gemma_300m_lora",  # Enable LoRA for action expert

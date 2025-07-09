@@ -191,6 +191,24 @@ def train_step(
     }
     return new_state, info
 
+"""
+fsdp_devices is the number of devices to shard the model across saved in the config and default is 1
+train.py is run
+Check batch size
+Give cache dir for training
+Set RNG
+Data sharding mesh
+Start from checkpoint
+Initialize wandb
+Make dataloader
+Given the datafactory inheriting class it has the repacking and transforms required. 
+Given the config's horizon of actions it chunks actions
+The iter functions turns it into a yielder for getting random batches
+Sanity check input
+Initialize the training or resume the training state
+ptrain_step which is the jit of train_set is repeatedly run which just passes the batch into the model, calculates the loss, and updates it.
+The loss is from calculating random timesteps of noise for the given inputs, inputting those noisy actions with the observations to the llm in a batch, getting the output denoising directions for a MSE with the correct denoising values. 
+"""
 
 def main(config: _config.TrainConfig):
     init_logging()

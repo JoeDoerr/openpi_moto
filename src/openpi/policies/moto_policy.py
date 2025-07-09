@@ -1,7 +1,7 @@
 """
 Motoman dual arm robot policy transforms for π₀ compatibility.
 
-This module provides simple transforms for Motoman dual arm robots (15 DOF),
+This module provides simple transforms for Motoman dual arm robots (16 DOF),
 similar to the droid policy approach.
 """
 
@@ -13,13 +13,14 @@ import numpy as np
 from openpi import transforms
 from openpi.models import model as _model
 
+motoman_dof = 16
 
 def make_motoman_example() -> dict:
     """Creates a random input example for your robot policy."""
     return {
-        "observation/state": np.random.rand(15),  # Motoman dual arm: 15 DOF
-        "observation/image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
-        "observation/wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),  # Optional
+        "state": np.random.rand(motoman_dof),  # Motoman dual arm: 16 DOF with gripper
+        "image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),  # Optional
         "prompt": "perform manipulation task",
     }
 
@@ -104,5 +105,5 @@ class MotoPolicyOutputs(transforms.DataTransformFn):
     """
 
     def __call__(self, data: dict) -> dict:
-        # Only return the first 15 dims (Motoman's DOF).
-        return {"actions": np.asarray(data["actions"][:, :15])} 
+        # Only return the first motoman_dof dims (Motoman's DOF).
+        return {"actions": np.asarray(data["actions"][:, :motoman_dof])} 
