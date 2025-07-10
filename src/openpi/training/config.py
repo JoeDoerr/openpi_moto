@@ -444,6 +444,12 @@ class LeRobotMotomanRobotDataConfig(DataConfigFactory):
             outputs=[moto_policy.MotoPolicyOutputs()],
         )
 
+        delta_action_mask = _transforms.make_bool_mask(15, -1) # 15 joints that need to be converted + 1 gripper
+        data_transforms = data_transforms.push(
+            inputs=[_transforms.DeltaActions(delta_action_mask)],
+            outputs=[_transforms.AbsoluteActions(delta_action_mask)],
+        )
+
         # Model transforms (standard, don't change)
         model_transforms = ModelTransformFactory(default_prompt=self.default_prompt)(model_config)
 
@@ -566,7 +572,11 @@ _CONFIGS = [
             ),
             default_prompt="perform manipulation task",
         ),
+        #resume=False, #If you want to resume training from a checkpoint, set this to True or put that in the command line
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi0_base/params"),
+        #weight_loader=weight_loaders.CheckpointWeightLoader(
+        #"./checkpoints/motoman_lora/your_exp_name/STEP_NUMBER/params"  # ← Your checkpoint path
+        #),
         num_train_steps=200,
         # LoRA-specific settings
         freeze_filter=pi0.Pi0Config(
