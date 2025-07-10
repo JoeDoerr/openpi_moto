@@ -554,9 +554,9 @@ _CONFIGS = [
         name="motoman_lora",
         # π₀ model with LoRA fine-tuning (low memory, recommended for most users)
         model=pi0.Pi0Config(
-            action_dim=16,  # Change to your robot's action dimensions
+            #action_dim=16,  # Change to your robot's action dimensions
             action_horizon=20,  # Change to desired action chunk length
-            #paligemma_variant="gemma_2b_lora",  # Enable LoRA for vision-language model
+            paligemma_variant="gemma_2b_lora",  # Enable LoRA for vision-language model
             action_expert_variant="gemma_300m_lora",  # Enable LoRA for action expert
         ),
         data=LeRobotMotomanRobotDataConfig(
@@ -567,10 +567,10 @@ _CONFIGS = [
             default_prompt="perform manipulation task",
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi0_base/params"),
-        num_train_steps=30_000,
+        num_train_steps=200,
         # LoRA-specific settings
         freeze_filter=pi0.Pi0Config(
-            #paligemma_variant="gemma_2b_lora",
+            paligemma_variant="gemma_2b_lora",
             action_expert_variant="gemma_300m_lora"
         ).get_freeze_filter(),
         ema_decay=None,  # Turn off EMA for LoRA
