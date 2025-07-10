@@ -20,7 +20,8 @@ def make_motoman_example() -> dict:
     return {
         "state": np.random.rand(motoman_dof),  # Motoman dual arm: 16 DOF with gripper
         "image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
-        "wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),  # Optional
+        "head_camera": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
         "prompt": "perform manipulation task",
     }
 

@@ -1,6 +1,6 @@
 import dataclasses
 import time
-import numpy as np
+
 import jax
 
 from openpi.models import model as _model
