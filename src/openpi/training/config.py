@@ -567,7 +567,7 @@ _CONFIGS = [
             default_prompt="perform manipulation task",
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("gs://openpi-assets/checkpoints/pi0_base/params"),
-        num_train_steps=200,
+        num_train_steps=250,
         # LoRA-specific settings
         freeze_filter=pi0.Pi0Config(
             paligemma_variant="gemma_2b_lora",
