@@ -21,5 +21,5 @@ while True:
     example = moto_policy.make_motoman_example() #Will repack then the data transforms will be applied
     socket.send_multipart([b"example", pickle.dumps(example)])
     result = socket.recv_multipart()
-    print("Result:", result, type(result))
+    print("Result:", result[0].decode(), pickle.loads(result[1])["actions"].shape, type(pickle.loads(result[1])))
     time.sleep(1)
